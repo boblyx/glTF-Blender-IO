@@ -259,15 +259,18 @@ def do_primitives(gltf, mesh_idx, skin_idx, mesh, ob):
                 loop_cols[col_i] = np.concatenate((loop_cols[col_i], cols))
 
         for idx, attr in enumerate(attributes):
-            if attr in prim.attributes:
-                attr_data = BinaryData.decode_accessor(gltf, prim.attributes[attr], cache=True)
-                attribute_data[idx] = np.concatenate((attribute_data[idx], attr_data[unique_indices]))
-            else:
-                attr_data = np.zeros(
-                    (len(unique_indices), DataType.num_elements(attribute_type[attr])),
-                     dtype=ComponentType.to_numpy_dtype(attribute_component_type[attr])
-                )
-                attribute_data[idx] = np.concatenate((attribute_data[idx], attr_data))
+            try: # Skip those with incorrect accessor indices
+                if attr in prim.attributes:
+                    attr_data = BinaryData.decode_accessor(gltf, prim.attributes[attr], cache=True)
+                    attribute_data[idx] = np.concatenate((attribute_data[idx], attr_data[unique_indices]))
+                else:
+                    attr_data = np.zeros(
+                        (len(unique_indices), DataType.num_elements(attribute_type[attr])),
+                         dtype=ComponentType.to_numpy_dtype(attribute_component_type[attr])
+                    )
+                    attribute_data[idx] = np.concatenate((attribute_data[idx], attr_data))
+            except Exception as e:
+                print(e)
 
     # Accessors are cached in case they are shared between primitives; clear
     # the cache now that all prims are done.
